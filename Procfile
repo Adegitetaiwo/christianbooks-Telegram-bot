@@ -1,0 +1,1 @@
+worker: python mychristian_bot.py
