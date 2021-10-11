@@ -1,43 +1,20 @@
-# # if message.chat.type == "private":
-# # 	# private chat message
-# #
-# # if message.chat.type == "group":
-# # 	# group chat message
-# #
-# # if message.chat.type == "supergroup":
-# # 	# supergroup chat message
-# #
-# # if message.chat.type == "channel":
-# # 	# channel message
-#
-#
 # import os
 # import telebot
 # from telebot import types
 # import time
 # import requests
 # from tinydb import TinyDB, Query
-# import logging
-#
-# import database
+# import random
 #
 # db = TinyDB('db.json')
 #
-# # logger = telebot.logger
-# # telebot.logger.setLevel(logging.DEBUG)  # Outputs debug messages to console.
-#
-# image = 'https://res.cloudinary.com/afmdjango/image/upload/v1609893859/gurdjvtxmdnupiyf4rfm.webp'
 # # document = 'https://res.cloudinary.com/afmdjango/image/upload/v1587142438/nhajgc6z5o3l5tavy0la.pdf'
 #
 # API_KEY = os.getenv('API_KEY')
 #
+# # Register bot with your unique Key (each bot has it own API Key, so if you want to kill a bot and use another,
+# # you just change the key)
 # bot = telebot.TeleBot('1957271668:AAHfqUHXUN4qH8sGrRNc0jcT0MrznZ_UkLU')
-#
-#
-# # command to respond to a greeting using the command word /greet
-# @bot.message_handler(commands=['greet'])
-# def greet(message):
-#     bot.reply_to(message, 'Hi how is it going?')
 #
 #
 # # command to respond to a greeting using the command word /hello
@@ -46,30 +23,39 @@
 #     bot.send_message(message.chat.id, 'Hi how is it going 👋?')
 #
 #
-# # command to send file using the command word /file
-# @bot.message_handler(commands=['file'])
-# def file(message):
-#     bot.send_document(message.chat.id, image, caption="Thanks, that's the file you requested for")
-#
-#
-# # Handler filters all categories that a user could send in a chat
-# @bot.message_handler(func=lambda message: True, content_types=['audio', 'video', 'document', 'text', 'location',
-#                                                                'contact', 'sticker'])
+# # Handler filters all categories of messages that a user could send in a chat
+# @bot.message_handler(commands=['start'], func=lambda message: True, content_types=['audio', 'video',
+#                                                                                    'document', 'text', 'location',
+#                                                                                    'contact', 'sticker'])
 # def message_path(message):
-#     global_result = []
-#
 #     if message.text is not None and message.text.lower() == '/start' or message.text.lower() in ['hello', 'hi',
 #                                                                                                  'hey', 'good morning',
 #                                                                                                  'good afternoon',
 #                                                                                                  'good evening', '👋']:
-#         # Introduction message when one start with a greeting
-#         intro_message = f"Hello *{message.from_user.first_name}* 👋, Welcome!\
+#         # Introduction message when one start with a greeting or start command
+#         welcome_msg_list = [f"Hello *{message.from_user.first_name}* 👋, Welcome!\
 #                         \nLet's get started, what can I help you with today?\
 #                         \n[1]. Book request\
 #                         \n[2]. Book Feedback\
-#                         \n[3]. Contact us"
+#                         \n[3]. Contact us",
 #
-#         # set up markup for keyboard
+#                             f"Holla *{message.from_user.first_name}* 👋, It nice to have you here!\
+#                         \nWhat can I help you with today?\
+#                         \n[1]. Book request\
+#                         \n[2]. Book Feedback\
+#                         \n[3]. Contact us",
+#
+#                             f"You're Welcome *{message.from_user.first_name}* ❤,\
+#                         \nWhat brings you to me 😉, what can I help you with today?\
+#                         \n[1]. Book request\
+#                         \n[2]. Book Feedback\
+#                         \n[3]. Contact us"
+#                             ]
+#
+#         # randomly pick a message from list of reply types and assign it as message to be sent to user
+#         intro_message = random.choice(welcome_msg_list)
+#
+#         # set up markup for keyboard, this is what forms the custom key of available options that a user has to select
 #         markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
 #         book_request_btn = types.KeyboardButton('Book request')
 #         book_feedback_btn = types.KeyboardButton('Book Feedback')
@@ -77,9 +63,12 @@
 #         markup.add(book_request_btn, book_feedback_btn, contact_btn)
 #
 #         # send message, pop up the custom keyboard (Book request and Book Feedback)
-#         bot.send_message(message.chat.id, intro_message, parse_mode="Markdown", reply_markup=markup)
-#
+#         msg = bot.send_message(message.chat.id, intro_message, parse_mode="Markdown", reply_markup=markup)
+#         bot.register_next_step_handler(msg, bot_ability_option)
 #     #
+#
+#
+# def bot_ability_option(message):
 #     if "book request" in message.text.lower() or message.text.lower() == '1':
 #         # set up markup for keyboard
 #         markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
@@ -88,128 +77,285 @@
 #         markup.add(book_request_btn, book_feedback_btn)
 #
 #         # send message, pop up the custom keyboard (search by Book title OR search by Book author)
-#         bot.send_message(message.chat.id, "Alright, you can choose to search by Book title "
-#                                           "or Authors name, which are you going for?", reply_markup=markup)
+#         reply_list = ["Alright, that is why i'm here! Would you like to search by Book title "
+#                       "or Authors name?",
+#                       "Perfect, which method would you like to search by, 'Book title' OR 'Author\'s name'?",
+#                       "Brilliant!, You can choose to search by 'Book title' OR Book 'Author's name', which one are you "
+#                       "going for?"]
+#         bot_response = random.choice(reply_list)
+#         msg = bot.send_message(message.chat.id, bot_response, reply_markup=markup)
+#         bot.register_next_step_handler(msg, search_by_book_attrib)
 #
-#     # from Book request branch
-#     if 'book title' in message.text.lower():
-#         markup = types.ForceReply(selective=False)
-#         bot.send_message(message.chat.id, "Please enter the title of the book you're trying to get! 🙂"
-#                                           "\n *PLEASE USE THE BELOW FORMAT* 👇 \
-#                                            \n \
-#                                            \n \
-#                                            \n *Title: book title* (e.g. Title: God's General) \
-#                                            \n \
-#                                            \n`Make sure to put the word 'Title:' with the colon first`.",
-#                          parse_mode="Markdown", reply_markup=markup)
-#
-#     result = []
-#     if "title:" in message.text.lower():
-#         bot.send_message(message.chat.id, "Searching the dataBase for Matches...")
-#
-#         book_title_ = message.text.lower().split()
-#         book_title_.pop(0)
-#         book_title__ = book_title_
-#         book_title = ""
-#         for word in book_title__:
-#             book_title = book_title + word
-#             book_title = book_title + " "
-#
-#         book_title = book_title.strip()
-#
-#         response = requests.get(f"http://127.0.0.1:8000/api/book/?title={book_title}")
-#
-#         #
-#         # result = []
-#         data = response.json()['queryset']
-#         if not data:
-#             bot.send_message(message.chat.id, f"I'm sorry, I could'nt find any book in my database that marches your "
-#                                               f"search '{book_title.capitalize()}'!")
-#         else:
-#             # title: God's general
-#
-#             for index, item in enumerate(data):
-#                 result_dict = {'user_id': f"{message.from_user.id}", 'rank': index + 1,
-#                                'id': item['id'], 'title': item['title'], 'author': item['author'], 'file': item['file']}
-#                 result.append(result_dict)
-#             message_text = ""
-#
-#             # global_result = result
-#
-#             for item in result:
-#                 line = f"\n{item['rank']}.   {item['title']} by {item['author']}"
-#                 message_text = message_text + line
-#
-#             print(message_text)
-#
-#             if len(result) > 1:
-#
-#                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
-#                                                    input_field_placeholder="Trying Placeholder")
-#                 _1 = types.KeyboardButton('1')
-#                 _2 = types.KeyboardButton('2')
-#                 _3 = types.KeyboardButton('3')
-#                 _4 = types.KeyboardButton('4')
-#                 _5 = types.KeyboardButton('5')
-#                 _6 = types.KeyboardButton('6')
-#                 _7 = types.KeyboardButton('7')
-#                 _8 = types.KeyboardButton('8')
-#                 _9 = types.KeyboardButton('9')
-#
-#                 markup.add(_1, _2, _3, _4, _5, _6, _7, _8, _9)
-#
-#                 bot.send_message(message.chat.id, "*Which of this do you said you want?* \n"
-#                                                   f"{message_text}",
-#                                  parse_mode="Markdown", reply_markup=markup)
-#             elif len(result) == 1:
-#
-#                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
-#                                                    input_field_placeholder="Trying Placeholder")
-#                 db.insert({'user_id': f"{message.from_user.id}", 'file_id': result[0]['id'], 'file': result[0]['file'],
-#                            'status': 'pending'})
-#
-#                 _yes = types.KeyboardButton('Yes, exactly 😊')
-#                 _no = types.KeyboardButton('No, not this 😌')
-#                 markup.add(_yes, _no)
-#                 msg = bot.send_message(message.chat.id, "*Do you mean this?* \n"
-#                                                         f"{message_text}",
-#                                        parse_mode="Markdown", reply_markup=markup)
-#                 bot.register_next_step_handler(msg, download_file)
-#             print("line 156", result)
+#     if "book feedback" in message.text.lower():
+#         bot.register_next_step_handler(message, book_feedback_branch())
+#         pass
 #
 #
-# def download_file(message):
+# def book_feedback_branch(message):
+#     # set up markup for keyboard
+#     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True,
+#                                        input_field_placeholder="book title, feedback")
+#     bot.send_message(message.chat.id, "Brilliant!, please write your feedback in this format: "
+#                                       "\n*book title, feedback*",
+#                      parse_mode="Markdown", reply_markup=markup)
+#
+#
+# def search_by_book_attrib(message):
+#     try:
+#         if message.text is not None and 'book title' in message.text.lower():
+#             markup = types.ForceReply(selective=False, input_field_placeholder="Book title. e.g God's general")
+#
+#             reply_list = ["Please what's the *Title of the book of the book you're trying "
+#                           "to get? 🙂", "Alright, kindly enter the title of the Book! 🙂",
+#                           "Brilliant!, What's is the Title of the book you're searching for?",
+#                           "Ok, i can help you with that, but i'll need to know the *Book's title*. 🙂"]
+#
+#             bot_response = random.choice(reply_list)
+#             msg = bot.send_message(message.chat.id, bot_response,
+#                                    parse_mode="Markdown", reply_markup=markup)
+#             bot.register_next_step_handler(msg, user_input_book_title)
+#
+#         elif message.text is not None and "book author" in message.text.lower():
+#             markup = types.ForceReply(selective=False, input_field_placeholder="Author's name. e.g Roberts Liardon")
+#
+#             reply_list = ["Please what's the name of the *Author* of the book you're trying "
+#                           "to get? 🙂", "Alright, kindly enter the name of the Author! 🙂",
+#                           "Brilliant!, What's is the Author's name of the book you're searching for?",
+#                           "Ok, i can help you with that, but i'll like to know the *Authors name*. 🙂"]
+#             bot_response = random.choice(reply_list)
+#             msg = bot.send_message(message.chat.id, bot_response,
+#                                    parse_mode="Markdown", reply_markup=markup)
+#             bot.register_next_step_handler(msg, user_input_book_author)
+#     except Exception as exc:
+#         pass
+#
+#
+# def user_input_book_title(message):
+#     try:
+#         if message.text is not None or "title:" in message.text.lower():
+#             bot.send_message(message.chat.id, "Searching the dataBase for Matches...")
+#             print(message.text.lower())
+#
+#             book_title = message.text.lower()
+#
+#             # book_title_ = message.text.lower().split()
+#             # book_title_.pop(0)
+#             # book_title__ = book_title_
+#             # book_title = ""
+#             #
+#             # for word in book_title__:
+#             #     book_title = book_title + word
+#             #     book_title = book_title + " "
+#             #
+#             # book_title = book_title.strip()
+#
+#             response = requests.get(f"https://christianbooks-bot-api.herokuapp.com/api/book/?title={book_title}")
+#
+#             result = []
+#             data = response.json()['queryset']
+#             if not data:
+#                 bot.send_message(message.chat.id,
+#                                  f"I'm sorry, I could'nt find any book in my database that marches your "
+#                                  f"search '{book_title.capitalize()}'!"
+#                                  f"\nPlease check your input and try again or you search by Author instead.")
+#             else:
+#                 for index, item in enumerate(data):
+#                     result_dict = {'user_id': f"{message.from_user.id}", 'rank': index + 1,
+#                                    'id': item['id'], 'title': item['title'], 'author': item['author'],
+#                                    'file': item['file']}
+#                     result.append(result_dict)
+#
+#                 message_text = ""
+#                 # global_result = result
+#
+#                 print("line 155: ", result)
+#                 for item in result:
+#                     line = f"\n{item['rank']}.   {item['title']} by {item['author']}"
+#                     message_text = message_text + line
+#
+#                 if len(result) == 1:
+#                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
+#                                                        input_field_placeholder="Trying Placeholder")
+#                     db.insert(
+#                         {'user_id': f"{message.from_user.id}", 'file_id': result[0]['id'], 'file': result[0]['file'],
+#                          'file_title': f"{result[0]['title']}", 'file_author': f"{result[0]['author']}",
+#                          'status': 'pending'})
+#
+#                     _yes = types.KeyboardButton('Yes, exactly 😊')
+#                     _no = types.KeyboardButton('No, not this 😌')
+#
+#                     markup.add(_yes, _no)
+#                     msg = bot.send_message(message.chat.id, "*Do you mean this?* \n"
+#                                                             f"{message_text}",
+#                                            parse_mode="Markdown", reply_markup=markup)
+#                     bot.register_next_step_handler(msg, download_file_from_single_list)
+#
+#                 elif len(result) > 1:
+#                     db.insert_multiple(result)
+#                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
+#                                                        input_field_placeholder="Trying Placeholder")
+#
+#                     _1 = types.KeyboardButton('1')
+#                     _2 = types.KeyboardButton('2')
+#                     _3 = types.KeyboardButton('3')
+#                     _4 = types.KeyboardButton('4')
+#                     _5 = types.KeyboardButton('5')
+#                     _6 = types.KeyboardButton('6')
+#                     _7 = types.KeyboardButton('7')
+#                     _8 = types.KeyboardButton('8')
+#                     _9 = types.KeyboardButton('9')
+#
+#                     markup.add(_1, _2, _3, _4, _5, _6, _7, _8, _9)
+#
+#                     msg = bot.send_message(message.chat.id, "*Which of this do you said you want?* \n"
+#                                                             f"{message_text}",
+#                                            parse_mode="Markdown", reply_markup=markup)
+#                     bot.register_next_step_handler(msg, down_load_file_from_multiple_list)
+#
+#     except Exception as exc:
+#         print('Something went wrong in search by title section')
+#         bot.reply_to(message, "Oops something went wrong!, Let try it "
+#                               "again. Please click /start")
+#
+#
+# def user_input_book_author(message):
 #     try:
 #
-#         pass
+#         if message.text is not None or "author:" in message.text.lower():
+#             bot.send_message(message.chat.id, "Searching the dataBase for Matches...")
+#             book_author = message.text.lower()
+#
+#             # book_author_ = message.text.lower().split()
+#             # book_author_.pop(0)
+#             # book_author__ = book_author_
+#             # book_author = ""
+#             #
+#             # for word in book_author__:
+#             #     book_author = book_author + word
+#             #     book_author = book_author + " "
+#             #
+#             # book_author = book_author.strip()
+#
+#             response = requests.get(f"https://christianbooks-bot-api.herokuapp.com/api/book/?author={book_author}")
+#
+#             result = []
+#             data = response.json()['queryset']
+#             print(data)
+#
+#             if not data:
+#                 bot.send_message(message.chat.id,
+#                                  f"I'm sorry, I could'nt find any book in my database that marches your "
+#                                  f"search '{book_author.capitalize()}'!"
+#                                  f"\nPlease check your input carefully and try again or you search by Author instead.")
+#             else:
+#                 for index, item in enumerate(data):
+#                     result_dict = {'user_id': f"{message.from_user.id}", 'rank': index + 1,
+#                                    'id': item['id'], 'title': item['title'], 'author': item['author'],
+#                                    'file': item['file']}
+#                     result.append(result_dict)
+#
+#                 message_text = ""
+#                 # global_result = result
+#
+#                 print("line 155: ", result)
+#                 for item in result:
+#                     line = f"\n{item['rank']}.   {item['title']} by {item['author']}"
+#                     message_text = message_text + line
+#
+#                 if len(result) == 1:
+#                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
+#                                                        input_field_placeholder="Trying Placeholder")
+#                     db.insert(
+#                         {'user_id': f"{message.from_user.id}", 'file_id': result[0]['id'], 'file': result[0]['file'],
+#                          'file_title': f"{result[0]['title']}", 'file_author': f"{result[0]['author']}",
+#                          'status': 'pending'})
+#
+#                     _yes = types.KeyboardButton('Yes, exactly 😊')
+#                     _no = types.KeyboardButton('No, not this 😌')
+#
+#                     markup.add(_yes, _no)
+#                     msg = bot.send_message(message.chat.id, "*Do you mean this?* \n"
+#                                                             f"{message_text}",
+#                                            parse_mode="Markdown", reply_markup=markup)
+#                     bot.register_next_step_handler(msg, download_file_from_single_list)
+#
+#                 elif len(result) > 1:
+#                     db.insert_multiple(result)
+#                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
+#                                                        input_field_placeholder="Trying Placeholder")
+#
+#                     _1 = types.KeyboardButton('1')
+#                     _2 = types.KeyboardButton('2')
+#                     _3 = types.KeyboardButton('3')
+#                     _4 = types.KeyboardButton('4')
+#                     _5 = types.KeyboardButton('5')
+#                     _6 = types.KeyboardButton('6')
+#                     _7 = types.KeyboardButton('7')
+#                     _8 = types.KeyboardButton('8')
+#                     _9 = types.KeyboardButton('9')
+#
+#                     markup.add(_1, _2, _3, _4, _5, _6, _7, _8, _9)
+#
+#                     msg = bot.send_message(message.chat.id, "*Which of this would you like to get?* \n"
+#                                                             f"{message_text}",
+#                                            parse_mode="Markdown", reply_markup=markup)
+#                     bot.register_next_step_handler(msg, down_load_file_from_multiple_list)
+#
+#     except Exception as exc:
+#         print('Something went wrong in search by author section')
+#         bot.reply_to(message, "Oops something went wrong!, Let try it "
+#                               "again. Please click /start")
+#
+#     # ---------------------------------------------------------------------------------------------------------------------------
+#
+#
+# def down_load_file_from_multiple_list(message):
+#     try:
+#         if message.text is not None:
+#             User = Query()
+#             query_rank = db.search(User.rank == int(message.text))
+#             print(query_rank)
+#             bot.reply_to(message, "Fetching Document...")
+#             document = query_rank[0]['file']
+#             caption = f"{query_rank[0]['title']} by {query_rank[0]['author']}"
+#             bot.send_document(message.chat.id, document, caption=caption)
+#             db.remove(User.user_id == f'{message.from_user.id}')
+#         else:
+#             User = Query()
+#             db.remove(User.user_id == f'{message.from_user.id}')
 #     except Exception as e:
-#         bot.reply_to(message, "Oops something went wrong!")
+#         print(e)
+#         bot.reply_to(message, "Oops something went wrong!, input is not in the list i showed you. If you like to try "
+#                               "again click /start")
 #
-#     if message.text is not None and 'yes, exactly' in message.text.lower():
-#         User = Query()
-#         db_search = db.search(User.user_id == message.from_user.id)
 #
-#         print("db_search: ", db_search)
-#         # download and send document
-#         bot.send_message(message.chat.id, "Downloading...")
-#         # print(result)
-#         bot.send_document(message.chat.id, data=result[0]['file'],
-#                           caption=f"{result[0]['title']} by {result[0]['author']}")
+# def download_file_from_single_list(message):
+#     try:
+#         if message.text is not None and "yes, exactly" in message.text.lower():
+#             User = Query()
 #
-#     #
-#     #
-#     #
-#     # get response and do SEARCH LOOKUP, and return list of possible marches with their ID
-#     #
-#     #
-#     #
+#             bot.reply_to(message, "Fetching Document...")
+#             query_list = db.search(User.user_id == f'{message.from_user.id}')
 #
-#     if "book feedback" in message.text.lower() or message.text.lower() == '2':
-#         # set up markup for keyboard
-#         markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True,
-#                                            input_field_placeholder="book title, feedback")
-#         bot.send_message(message.chat.id, "wow!, please write your feedback in this format: \n*book title, feedback*",
-#                          parse_mode="Markdown", reply_markup=markup)
+#             document = query_list[0]['file']
+#             caption = f"{query_list[0]['file_title']} by {query_list[0]['file_author']}"
+#
+#             bot.send_document(message.chat.id, document, caption=caption)
+#             db.remove(User.user_id == f'{message.from_user.id}')
+#
+#             last_msg = "\n" \
+#                        "\nThanks. Please do well to tell your friends about me." \
+#                        "\nYou can also drop a /feedback"
+#             bot.send_message(message.chat.id, last_msg)
+#         elif message.text is not None and "no, not this" in message.text.lower():
+#             User = Query()
+#
+#             msg = bot.send_message(message.chat.id, "Oops..., sorry about that, Let try again. Please click /start")
+#             db.remove(User.user_id == f'{message.from_user.id}')
+#             bot.register_next_step_handler(msg, message_path)
+#
+#     except Exception as e:
+#         bot.reply_to(message, "Oops something went wrong!, let try again. Please click /start")
 #
 #     # else:
 #     #     bot.send_message(message.chat.id,
@@ -243,5 +389,3 @@
 #         #
 #         # bot.send_message(message.chat.id, "Request is processing...")
 #         # bot.send_document(message.chat.id, file_, caption=file_title)
-#
-#

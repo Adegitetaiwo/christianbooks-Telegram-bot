@@ -1,1 +1,4 @@
+.vscode/
 pybotenv/
+reserved.py
+database.py
