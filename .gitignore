@@ -1,4 +1,4 @@
-.vscode/
+../.vscode/
 pybotenv/
 reserved.py
 database.py
