@@ -1,5 +1,5 @@
-/.vscode/
-/pybotenv/
+pybotenv/
+.vscode/
 /reserved.py
 /database.py
 /__pycache__
