@@ -1,5 +1,5 @@
-../.vscode/
-pybotenv/
-reserved.py
-database.py
-__pycache__
+/.vscode/
+/pybotenv/
+/reserved.py
+/database.py
+/__pycache__
