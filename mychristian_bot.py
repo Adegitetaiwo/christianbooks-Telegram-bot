@@ -2,6 +2,7 @@ import os
 import telebot
 from telebot import types
 import time
+import datetime
 import requests
 from tinydb import TinyDB, Query
 import random
@@ -18,38 +19,52 @@ bot = telebot.TeleBot('1957271668:AAHfqUHXUN4qH8sGrRNc0jcT0MrznZ_UkLU')
 
 
 # command to respond to a greeting using the command word /hello
-@bot.message_handler(commands=['hello'])
-def hello(message):
-    bot.send_message(message.chat.id, 'Hi how is it going 👋?')
+@bot.message_handler(commands=['feedback'])
+def run_feedback_fun(message):
+    user_input_feedback(message)
+    print("function should have ran")
+
+
+# Greeting Function
+def greet():
+    currentTime = datetime.datetime.now()
+    if currentTime.hour < 12:
+        return 'Good morning'
+    elif 12 <= currentTime.hour < 18:
+        return 'Good afternoon'
+    else:
+        return 'Good evening'
 
 
 # Handler filters all categories of messages that a user could send in a chat
-@bot.message_handler(commands=['start'], func=lambda message: True, content_types=['audio', 'video',
-                                                                                   'document', 'text', 'location',
-                                                                                   'contact', 'sticker'])
+@bot.message_handler(func=lambda message: True, content_types=['audio', 'video',
+                                                               'document', 'text', 'location',
+                                                               'contact', 'sticker'])
 def message_path(message):
     if message.text is not None and message.text.lower() == '/start' or message.text.lower() in ['hello', 'hi',
                                                                                                  'hey', 'good morning',
                                                                                                  'good afternoon',
                                                                                                  'good evening', '👋']:
         # Introduction message when one start with a greeting or start command
-        welcome_msg_list = [f"Hello *{message.from_user.first_name}* 👋, Welcome!\
+
+        greet_text = greet()
+        welcome_msg_list = [f"Hello, *{greet_text} {message.from_user.first_name}* 👋 and Welcome!\
                         \nLet's get started, what can I help you with today?\
-                        \n[1]. Book request\
-                        \n[2]. Book Feedback\
-                        \n[3]. Contact us",
+                        \n📬 Book request\
+                        \n📃 Book Feedback\
+                        \n📞. Contact us",
 
-                            f"Holla *{message.from_user.first_name}* 👋, It nice to have you here!\
+                            f"Holla! *{greet_text} {message.from_user.first_name}* 👋, It nice to have you here!\
                         \nWhat can I help you with today?\
-                        \n[1]. Book request\
-                        \n[2]. Book Feedback\
-                        \n[3]. Contact us",
+                        \n📬 Book request\
+                        \n📃 Book Feedback\
+                        \n📞. Contact us",
 
-                            f"You're Welcome *{message.from_user.first_name}* ❤,\
+                            f"You're Welcome *{message.from_user.first_name}* ❤ and *{greet_text}*,\
                         \nWhat brings you to me 😉, what can I help you with today?\
-                        \n[1]. Book request\
-                        \n[2]. Book Feedback\
-                        \n[3]. Contact us"
+                        \n📬 Book request\
+                        \n📃 Book Feedback\
+                        \n📞. Contact us"
                             ]
 
         # randomly pick a message from list of reply types and assign it as message to be sent to user
@@ -73,8 +88,8 @@ def bot_ability_option(message):
         if "book request" in message.text.lower() or "No, please" in message.text.lower():
             # set up markup for keyboard
             markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
-            book_request_btn = types.KeyboardButton('search by Book title')
-            book_feedback_btn = types.KeyboardButton('search by Book author')
+            book_request_btn = types.KeyboardButton('by Book title')
+            book_feedback_btn = types.KeyboardButton('by Book author')
             markup.add(book_request_btn, book_feedback_btn)
 
             # send message, pop up the custom keyboard (search by Book title OR search by Book author)
@@ -89,12 +104,21 @@ def bot_ability_option(message):
             bot.register_next_step_handler(msg, search_by_book_attrib)
 
         elif "book feedback" in message.text.lower() or "/feedback" in message.text.lower():
-            # set up markup for keyboard
-            markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True,
-                                               input_field_placeholder="book title, feedback")
-            bot.send_message(message.chat.id, "Brilliant!, please write your feedback in this format: "
-                                              "\n*book title, feedback*",
-                             parse_mode="Markdown", reply_markup=markup)
+            contact_reply = [
+                "Thanks for reaching out. \
+                \n\nKindly send your feedback to us through any of our endpoint below! \
+                \n*Email:* pycodet@gmail.com \
+                \n*Telegram:* https://t.me/taiwoadegite",
+
+                "Lovely..Thanks for reaching out. \
+                \n\nKindly send your feedback to us through any of our endpoint below! \
+                \n*Email:* pycodet@gmail.com \
+                \n*Telegram:* https://t.me/taiwoadegite"
+            ]
+
+            response = random.choice(contact_reply)
+            bot.send_message(message.chat.id, response, parse_mode="Markdown")
+
         elif "contact" in message.text.lower() or "/feedback" in message.text.lower():
             contact_reply = [
                 "Thanks for reaching out. \
@@ -109,6 +133,12 @@ def bot_ability_option(message):
             ]
             response = random.choice(contact_reply)
             bot.send_message(message.chat.id, response, parse_mode="Markdown")
+
+        else:
+            remove_markup = types.ReplyKeyboardRemove()
+            response = "Opps, you're expected to choose either to Request for a Book, Give a Feedback on a " \
+                       "book, or to Contact us. /start "
+            bot.send_message(message.chat.id, response, parse_mode="Markdown", reply_markup=remove_markup)
 
 
 def search_by_book_attrib(message):
@@ -133,9 +163,38 @@ def search_by_book_attrib(message):
                       "Brilliant!, What's is the Author's name of the book you're searching for?",
                       "Ok, i can help you with that, but i'll like to know the *Authors name*. 🙂"]
         bot_response_ = random.choice(reply_list)
-        msg = bot.send_message(message.chat.id, reply_list[0],
+        msg = bot.send_message(message.chat.id, bot_response_,
                                parse_mode="Markdown", reply_markup=markup)
         bot.register_next_step_handler(msg, user_input_book_author)
+    elif message.text is not None and "feedback" in message.text.lower():
+        bot.register_next_step_handler(user_input_feedback)
+    else:
+        bot.register_next_step_handler(search_by_book_attrib)
+
+
+def user_input_feedback(message):
+    try:
+        if "title:" in message.text.lower() or message.text.lower() == '/start':
+            contact_reply = [
+                "Thanks for reaching out. \
+                \n\nKindly send your feedback to us through any of our endpoint below! \
+                \n*Email:* pycodet@gmail.com \
+                \n*Telegram:* https://t.me/taiwoadegite",
+
+                "Lovely..Thanks for reaching out. \
+                \n\nKindly send your feedback to us through any of our endpoint below! \
+                \n*Email:* pycodet@gmail.com \
+                \n*Telegram:* https://t.me/taiwoadegite"
+            ]
+
+            response = random.choice(contact_reply)
+            bot.send_message(message.chat.id, response, parse_mode="Markdown")
+
+    except Exception as exc:
+        print('Something went wrong in feedback section')
+        print(exc)
+        bot.reply_to(message, "Oops an EXCEPTION happened!, Let try it "
+                              "again. Please click /start")
 
 
 def user_input_book_title(message):
@@ -151,10 +210,19 @@ def user_input_book_title(message):
             result = []
             data = response.json()['queryset']
             if not data:
-                bot.send_message(message.chat.id,
-                                 f"I'm sorry, I could'nt find any book in my database that marches your "
-                                 f"search '{book_title.capitalize()}'!"
-                                 f"\nPlease check your input and try again or you search by Author instead.")
+                markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+                book_title_key = types.KeyboardButton('by Book title')
+                book_author_key = types.KeyboardButton('by Book Author')
+                stop_command_key = types.KeyboardButton('/stop')
+                markup.add(book_title_key, book_author_key, stop_command_key)
+
+                msg = bot.send_message(message.chat.id,
+                                       f"I'm sorry, I could'nt find any book in my database that marches your "
+                                       f"search '{book_title.capitalize()}'!"
+                                       f"\nPlease check your input and try again or you search by Author instead.",
+                                       reply_markup=markup)
+
+                bot.register_next_step_handler(msg, search_by_book_attrib)
             else:
                 for index, item in enumerate(data):
                     result_dict = {'user_id': f"{message.from_user.id}", 'rank': index + 1,
@@ -165,7 +233,7 @@ def user_input_book_title(message):
                 message_text = ""
                 # global_result = result
 
-                print("line 155: ", result)
+                print("line 199: ", result)
                 for item in result:
                     line = f"\n{item['rank']}.   {item['title']} by {item['author']}"
                     message_text = message_text + line
@@ -191,6 +259,7 @@ def user_input_book_title(message):
                     db.insert_multiple(result)
                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
                                                        input_field_placeholder="Trying Placeholder")
+                    result_length = len(result)
 
                     _1 = types.KeyboardButton('1')
                     _2 = types.KeyboardButton('2')
@@ -201,8 +270,24 @@ def user_input_book_title(message):
                     _7 = types.KeyboardButton('7')
                     _8 = types.KeyboardButton('8')
                     _9 = types.KeyboardButton('9')
+                    _10 = types.KeyboardButton('10')
+                    _11 = types.KeyboardButton('11')
+                    _12 = types.KeyboardButton('12')
+                    _13 = types.KeyboardButton('13')
+                    _14 = types.KeyboardButton('14')
+                    _15 = types.KeyboardButton('15')
+                    _16 = types.KeyboardButton('16')
+                    _17 = types.KeyboardButton('17')
+                    _18 = types.KeyboardButton('18')
+                    _19 = types.KeyboardButton('19')
+                    _20 = types.KeyboardButton('20')
 
-                    markup.add(_1, _2, _3, _4, _5, _6, _7, _8, _9)
+                    if result_length <= 5:
+                        markup.add(_1, _2, _3, _4, _5)
+                    elif result_length <= 20:
+                        markup.add(_6, _7, _8, _9, _10)
+                    elif result_length <= 20:
+                        markup.add(_11, _12, _13, _14, _15, _16, _17, _18, _19, _20)
 
                     msg = bot.send_message(message.chat.id, "*Which of this do you said you want?* \n"
                                                             f"{message_text}",
@@ -211,7 +296,8 @@ def user_input_book_title(message):
 
     except Exception as exc:
         print('Something went wrong in search by title section')
-        bot.reply_to(message, "Oops something went wrong!, Let try it "
+        print(exc)
+        bot.reply_to(message, "Oops an EXCEPTION happened!, Let try it "
                               "again. Please click /start")
 
 
@@ -229,10 +315,20 @@ def user_input_book_author(message):
             print(data)
 
             if not data:
-                bot.send_message(message.chat.id,
-                                 f"I'm sorry, I could'nt find any book in my database that marches your "
-                                 f"search '{book_author.capitalize()}'!"
-                                 f"\nPlease check your input carefully and try again or you search by Author instead.")
+                markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+                book_title_key = types.KeyboardButton('by Book title')
+                book_author_key = types.KeyboardButton('by Book Author')
+                stop_command_key = types.KeyboardButton('/stop')
+                markup.add(book_title_key, book_author_key, stop_command_key)
+
+                msg = bot.send_message(message.chat.id,
+                                       f"I'm sorry, I could'nt find any book in my database that marches your "
+                                       f"search '{book_author.capitalize()}'!"
+                                       f"\nPlease check your input carefully and try again or you search by Author "
+                                       f"instead.",
+                                       reply_markup=markup)
+
+                bot.register_next_step_handler(msg, search_by_book_attrib)
             else:
                 for index, item in enumerate(data):
                     result_dict = {'user_id': f"{message.from_user.id}", 'rank': index + 1,
@@ -289,7 +385,7 @@ def user_input_book_author(message):
 
     except Exception as exc:
         print('Something went wrong in search by author section')
-        bot.reply_to(message, "Oops something went wrong!, Let try it "
+        bot.reply_to(message, "Oops! an EXCEPTION happened, Let try it"
                               "again. Please click /start")
 
 
@@ -304,6 +400,24 @@ def down_load_file_from_multiple_list(message):
             caption = f"{query_rank[0]['title']} by {query_rank[0]['author']}"
             bot.send_document(message.chat.id, document, caption=caption)
             db.remove(User.user_id == f'{message.from_user.id}')
+
+            reply_list = [
+                "would that be all for now?",
+                "Thanks, is that all?",
+                "Do have a nice reading. I guess that's all?"
+            ]
+            response = random.choice(reply_list)
+
+            markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+            yes_btn = types.KeyboardButton('Yes, Thanks!')
+            no_btn = types.KeyboardButton('No, please')
+
+            markup.add(yes_btn, no_btn)
+            # Sleep for 2 seconds, then send message, pop up the custom keyboard (Book request and Book Feedback)
+            time.sleep(2)
+            msg = bot.send_message(message.chat.id, response, parse_mode="Markdown", reply_markup=markup)
+            bot.register_next_step_handler(msg, end_trend_or_go_back)
+
         else:
             User = Query()
             db.remove(User.user_id == f'{message.from_user.id}')
@@ -338,7 +452,8 @@ def download_file_from_single_list(message):
             no_btn = types.KeyboardButton('No, please')
 
             markup.add(yes_btn, no_btn)
-            # send message, pop up the custom keyboard (Book request and Book Feedback)
+            # Sleep for 2 seconds, then send message, pop up the custom keyboard (Book request and Book Feedback)
+            time.sleep(2)
             msg = bot.send_message(message.chat.id, response, parse_mode="Markdown", reply_markup=markup)
 
             # remove record from noSQL database 'db.json'
@@ -367,6 +482,40 @@ def end_trend_or_go_back(message):
             bot.send_message(message.chat.id, last_msg)
         elif "no" in message.text.lower():
             msg = bot.send_message(message.chat.id, "redirecting...")
+
+            # Introduction message when one start with a greeting or start command
+            welcome_msg_list = ["Alright!\
+                                    \nwhat would you have me do for you again 😊? \
+                                    \n📬 Book request\
+                                    \n📃 Book Feedback\
+                                    \n📞. Contact us",
+
+                                f"Ok! \
+                                    \nwhat would you have me do for you again? 😉\
+                                    \n📬 Book request\
+                                    \n📃 Book Feedback\
+                                    \n📞. Contact us",
+
+                                f"Sweet! ❤,\
+                                    \nwhat would you have me do for you again?\
+                                    \n📬 Book request\
+                                    \n📃 Book Feedback\
+                                    \n📞. Contact us"
+                                ]
+
+            # randomly pick a message from list of reply types and assign it as message to be sent to user
+            intro_message = random.choice(welcome_msg_list)
+
+            # set up markup for keyboard, this is what forms the custom key of available options that a user has to
+            # select
+            markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+            book_request_btn = types.KeyboardButton('Book request')
+            book_feedback_btn = types.KeyboardButton('Book Feedback')
+            contact_btn = types.KeyboardButton('Contact')
+            markup.add(book_request_btn, book_feedback_btn, contact_btn)
+
+            # send message, pop up the custom keyboard (Book request and Book Feedback)
+            msg = bot.send_message(message.chat.id, intro_message, parse_mode="Markdown", reply_markup=markup)
             bot.register_next_step_handler(msg, bot_ability_option)
 
 
