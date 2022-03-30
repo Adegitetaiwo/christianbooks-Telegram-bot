@@ -1,1 +1,1 @@
-worker: python mychristian_bot.py
+worker: python 3.7.6 mychristian_bot.py
