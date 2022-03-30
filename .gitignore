@@ -1,5 +1,4 @@
 pybotenv
-
-# Byte-compiled / optimized / D
+.env
 __pycache__/
 reserved.py
