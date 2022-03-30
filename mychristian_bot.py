@@ -18,6 +18,13 @@ API_KEY = os.getenv('API_KEY')
 bot = telebot.TeleBot('1957271668:AAHfqUHXUN4qH8sGrRNc0jcT0MrznZ_UkLU')
 
 
+# command to respond to a greeting using the command word /hello
+@bot.message_handler(commands=['feedback'])
+def run_feedback_fun(message):
+    user_input_feedback(message)
+    print("function should have ran")
+
+
 # Greeting Function
 def greet():
     currentTime = datetime.datetime.now()
