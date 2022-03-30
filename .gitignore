@@ -1,5 +1,5 @@
-pybotenv/
-.vscode/
-/reserved.py
-/database.py
-/__pycache__
+pybotenv
+
+# Byte-compiled / optimized / D
+__pycache__/
+reserved.py
