@@ -476,8 +476,7 @@ def end_trend_or_go_back(message):
         if "yes" in message.text.lower():
             last_msg = "\n" \
                        "\nThanks and do have a good day!. 👋" \
-                       "\nPlease do well to tell your friends about me." \
-                       "\nYou can also drop a /feedback"
+                       "\nPlease do well to tell your friends about me."
             bot.send_message(message.chat.id, last_msg)
         elif "no" in message.text.lower():
             msg = bot.send_message(message.chat.id, "redirecting...")
