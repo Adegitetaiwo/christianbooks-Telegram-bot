@@ -83,7 +83,7 @@ def message_path(message):
 
 
 def bot_ability_option(message):
-    if message.text is not None:
+    if message.text is not None and "book request" in message.text.lower():
         if "book request" in message.text.lower() or "No, please" in message.text.lower():
             # set up markup for keyboard
             markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
@@ -165,7 +165,7 @@ def search_by_book_attrib(message):
         msg = bot.send_message(message.chat.id, bot_response_,
                                parse_mode="Markdown", reply_markup=markup)
         bot.register_next_step_handler(msg, user_input_book_author)
-    elif message.text is not None and "/feedback" in message.text.lower():
+    elif message.text is not None and "feedback" in message.text.lower():
         bot.register_next_step_handler(user_input_feedback)
     else:
         bot.register_next_step_handler(search_by_book_attrib)
@@ -477,7 +477,7 @@ def end_trend_or_go_back(message):
             last_msg = "\n" \
                        "\nThanks and do have a good day!. 👋" \
                        "\nPlease do well to tell your friends about me." \
-                       "\nYou can also drop a"
+                       "\nYou can also drop a /feedback"
             bot.send_message(message.chat.id, last_msg)
         elif "no" in message.text.lower():
             msg = bot.send_message(message.chat.id, "redirecting...")
